@@ -9,12 +9,16 @@ Enforce is a work around this.
 
 ## Run
 
+### Install Deps
+
 npm i
 
-// build the circuit
+### build the circuit
+
 npm run build 
 
-// run
+### run
+
 npm test
 
 
