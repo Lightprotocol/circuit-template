@@ -14,10 +14,9 @@ describe("Tests", () => {
 
 
         const inputs = {
-            a: "1",
-            b: "2",
-            c: "3",
-            enforce: "1"
+          leaf: "7853200120776062878684798364095072458815029376092732009249414926327459813530",
+          path_index: new Array(10).fill("1"),
+          path_elements: new Array(10).fill(new Array(4).fill("1")),
         }
 
         let witnessCalculator = await calculateWtns(buffer);

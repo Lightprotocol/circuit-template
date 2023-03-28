@@ -1,4 +1,4 @@
 pragma circom 2.0.0;
-include "./circuit.circom";
+include "./trees/incrementalQuinTree.circom";
 
-component main {public [c]} = Example();
+component main = QuinTreeInclusionProof(10);
