@@ -4,7 +4,7 @@ include "../node_modules/circomlib/circuits/comparators.circom";
 include "./merkleProof.circom";
 
 template Example() {
-    var levels = 256;
+    var levels = 20;
 
     signal input inPathIndices;
     signal input inPathElements[levels];

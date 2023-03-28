@@ -10,12 +10,12 @@ import { MerkleTree } from "./merkleTree";
 describe("Tests", () => {
 
 
-    it.skip("example circuit proofgen", async () => {
+    it("example circuit proofgen", async () => {
         const completePathZkey = "./build/circuit.zkey";
         const buffer = readFileSync("./build/Circuit_js/Circuit.wasm");
         const poseidon = await circomlibjs.buildPoseidonOpt();
       const leaf = poseidon(["1"]);
-      const merkleTree = new MerkleTree(256, poseidon, [leaf]);
+      const merkleTree = new MerkleTree(20, poseidon, [leaf]);
       console.log("merkleTree.path(merkleTree.indexOf(leaf))", merkleTree.path(merkleTree.indexOf(leaf)));
       
       const inputs = {
