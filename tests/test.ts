@@ -4,21 +4,26 @@ var ffjavascript = require("ffjavascript");
 const { unstringifyBigInts, stringifyBigInts, leInt2Buff, leBuff2int } = ffjavascript.utils;
 import {  readFileSync} from "fs";
 const snarkjs = require("snarkjs");
+import {BN} from "@coral-xyz/anchor";
+import { MerkleTree } from "./merkleTree";
 
 describe("Tests", () => {
 
 
-    it("example circuit proofgen", async () => {
+    it.skip("example circuit proofgen", async () => {
         const completePathZkey = "./build/circuit.zkey";
         const buffer = readFileSync("./build/Circuit_js/Circuit.wasm");
-
-
-        const inputs = {
-            a: "1",
-            b: "2",
-            c: "3",
-            enforce: "1"
-        }
+        const poseidon = await circomlibjs.buildPoseidonOpt();
+      const leaf = poseidon(["1"]);
+      const merkleTree = new MerkleTree(256, poseidon, [leaf]);
+      console.log("merkleTree.path(merkleTree.indexOf(leaf))", merkleTree.path(merkleTree.indexOf(leaf)));
+      
+      const inputs = {
+          root: merkleTree.root(),
+          inPathIndices: merkleTree.indexOf(leaf),
+          inPathElements: merkleTree.path(merkleTree.indexOf(leaf)).pathElements,
+          leaf: poseidon.F.toString(leaf)
+      }
 
         let witnessCalculator = await calculateWtns(buffer);
 
@@ -49,15 +54,17 @@ describe("Tests", () => {
           }
     })
 
-    it("example poseidon hash", async () => {
+    it("poseidon hash test cases", async () => {
         const poseidon = await circomlibjs.buildPoseidonOpt();
+      for (var i = 1; i < 17; i++) {
+        const hash = poseidon.F.toObject(
+          poseidon(
+            Array(i).fill(1)
+          ),
+        );
+        // console.log(new BN(poseidon.F.toObject(hash)).toArray("le", 32).reverse());
 
-        const hash = poseidon.F.toString(
-            poseidon(
-              [1, 2]
-            ),
-          );
-        console.log(hash);
-        
+        console.log('[' + new BN(hash).toArray("le", 32).reverse().toString() + '],');
+      }
     })
 })

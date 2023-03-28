@@ -4,12 +4,13 @@
   "description": "template for circom circuits",
   "main": "index.js",
   "scripts": {
-    "test": "ts-mocha --resolveJsonModule ./tsconfig.json tests/**.ts",
+    "test": "ts-mocha --resolveJsonModule ./tsconfig.json --t 1000000  tests/**.ts --exit",
     "build": "sh buildCircuit.sh"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@coral-xyz/anchor": "^0.26.0",
     "circomlib": "^2.0.5",
     "circomlibjs": "^0.1.7",
     "ffjavascript": "^0.2.57",

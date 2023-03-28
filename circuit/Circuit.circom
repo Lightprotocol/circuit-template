@@ -1,4 +1,4 @@
-pragma circom 2.0.0;
+pragma circom 2.1.4;
 include "./circuit.circom";
 
-component main {public [c]} = Example();
+component main {public [root]} = Example();

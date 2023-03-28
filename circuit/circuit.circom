@@ -1,16 +1,20 @@
-pragma circom 2.0.0;
+pragma circom 2.1.4;
 include "../node_modules/circomlib/circuits/poseidon.circom";
 include "../node_modules/circomlib/circuits/comparators.circom";
+include "./merkleProof.circom";
 
 template Example() {
-    signal input a;
-    signal input b;
-    signal input c;
-    signal input enforce;
+    var levels = 256;
 
-    component if_enforce = ForceEqualIfEnabled();
-    if_enforce.in[0] <== a + b;
-    if_enforce.in[1] <== c;
-    if_enforce.enabled <== enforce;
+    signal input inPathIndices;
+    signal input inPathElements[levels];
+    signal input root;
+    signal input leaf;
+
+    component inTree = MerkleProof(levels);
+    inTree.leaf <== leaf;
+    inTree.pathIndices <== inPathIndices;
+    inTree.pathElements <== inPathElements;
+    inTree.root === root;
 
 }
