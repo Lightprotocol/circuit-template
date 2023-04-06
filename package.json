@@ -4,7 +4,8 @@
   "description": "template for circom circuits",
   "main": "index.js",
   "scripts": {
-    "test": "ts-mocha --resolveJsonModule ./tsconfig.json tests/**.ts",
+    "test": "ts-mocha --resolveJsonModule ./tsconfig.json test/**.ts",
+    "test-prover": "ts-mocha --timeout 5000 ./test/prover.test.ts",
     "build": "sh buildCircuit.sh",
     "clean": "rm -rf ./build"
   },
@@ -19,10 +20,12 @@
   },
   "devDependencies": {
     "@types/chai": "^4.3.0",
+    "@types/chai-as-promised": "^7.1.5",
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.5",
     "@types/node-fetch": "^2.6.2",
     "chai": "^4.3.7",
+    "chai-as-promised": "^7.1.1",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^4.3.5"

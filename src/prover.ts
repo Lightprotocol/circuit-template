@@ -11,7 +11,7 @@ interface InputData {
 	public?: number;
 }
 
-class Prover {
+export class Prover {
 
     public zkeyFilePath: string;
 	public r1csFilePath: string;
@@ -20,6 +20,7 @@ class Prover {
 	public symText;
 	public vKey;
 	public inputs: Array<InputData>;
+	public inputsNum: number;
     public proofInputs;
     public publicInputs;
     public proof;
@@ -135,6 +136,7 @@ class Prover {
 		}
 		const marr = uniqueMaxSize(inputs_arr);
 		
+		this.inputsNum = uarr.length;
 		this.inputs = marr.slice(0, uarr.length);
 		
 	}
@@ -146,20 +148,12 @@ class Prover {
 
 	}
 
-	async fullProve(wasm_path: string) {
+	async fullProve(wasm_path: string, input: any) {
 		const { proof, publicSignals } = await snarkjs.groth16.fullProve(
-			{
-				b: "2",
-				a: "1",
-				c: "3",
-				enforce: "1",
-				d: "3",
-				f: "2"
-			}, 
+			input, 
 			wasm_path,
 			this.zkeyFilePath
-			
-		)
+		);
 
 		this.publicInputs = publicSignals;
 		this.proof = proof;
@@ -191,9 +185,13 @@ class Prover {
 		// sdk in light protocol onchain in a generic way
 	}
 	
-	/// parse proof to Solana be bytes
+	/// parse proof to Solana BE bytes
 	/// also converts lE to BE
-    parseProofToBytesArray(data: any) {
+    parseProofToBytesArray(data: any): {
+		proofA: number[], 
+		proofB: number[],
+		proofC: number[]
+	} {
 		var mydata = JSON.parse(data.toString());
 
 		for (var i in mydata) {
@@ -225,7 +223,7 @@ class Prover {
 	}
 
 	// mainly used to parse the public signals of groth16 fullProve
-	parseToBytesArray(publicSignals: Array<string>) {
+	parseToBytesArray(publicSignals: Array<string>): number[][] {
       
 		var publicInputsBytes = new Array<Array<number>>();
 		for (var i in publicSignals) {
@@ -239,30 +237,33 @@ class Prover {
 		return publicInputsBytes
 	}
 
+	/* parsePublicInputsFromArray(publicInputsBytes: number[][]): PublicInputs {
+		if (!publicInputsBytes) {
+		  throw new VerifierError(
+			VerifierErrorCode.PUBLIC_INPUTS_UNDEFINED,
+			"parsePublicInputsFromArray",
+			"verifier zero",
+		  );
+		}
+		if (publicInputsBytes.length != this.config.nrPublicInputs) {
+		  throw new VerifierError(
+			VerifierErrorCode.INVALID_INPUTS_NUMBER,
+			"parsePublicInputsFromArray",
+			`verifier zero: publicInputsBytes.length invalid ${publicInputsBytes.length} != ${this.config.nrPublicInputs}`,
+		  );
+		}
+		return {
+		  root: publicInputsBytes[0],
+		  publicAmount: publicInputsBytes[1],
+		  extDataHash: publicInputsBytes[2],
+		  feeAmount: publicInputsBytes[3],
+		  mintPubkey: publicInputsBytes[4],
+		  nullifiers: [publicInputsBytes[5], publicInputsBytes[6]],
+		  leaves: [[publicInputsBytes[7], publicInputsBytes[8]]],
+		};
+	  } */
 }
 
-const sample_prover = new Prover(
-	'./build/circuit.zkey',
-	'./build/Circuit.r1cs',
-	'./build/Circuit.sym'
-);
-
-sample_prover.genR1csJson().then(update => {
-	console.log(sample_prover.symText);
-	console.log(sample_prover.r1csJson);
-});
-
-sample_prover.prepareInputs().then(update => {
-	console.log(sample_prover.inputs);
-});	
-
-sample_prover.fullProve('./build/Circuit_js/Circuit.wasm').then(update => {
-	console.log(sample_prover.publicInputs);
-	//console.log(sample_prover.proof);
-	sample_prover.verify().then(res => {
-		console.log('Verification Ok!', res);
-	})
-})
 
 
 
