@@ -1,29 +1,49 @@
-import { Prover } from '../src/prover';
+import { Prover, circuitFilePaths } from '../src/prover';
 import { expect } from 'chai';
 
-// import chaiAsPromised from 'chai-as-promised';
-// import chai from 'chai';
-// chai.use(chaiAsPromised);
+describe('Circuit-Example Prover Tests', async() => {
+  let prover;
+  before(async() => {
 
+    const circuitFilePaths: circuitFilePaths = 
+    {
+      zkey: './test-cases/circuit_example/build/circuit.zkey',
+      r1cs: './test-cases/circuit_example/build/Circuit.r1cs',
+      sym: './test-cases/circuit_example/build/Circuit.sym',
+      wasm: './test-cases/circuit_example/build/Circuit_js/Circuit.wasm',
+    }
+    prover = new Prover(circuitFilePaths);
+  })
+
+  it('Inputs Parser Test', async() => {
+    await prover.prepareInputs();
+    console.log('nOut: ', prover.nOut);
+    console.log('nPub: ', prover.nPub);
+    console.log('nPrv: ', prover.nPrv);
+  
+  })
+})
 describe('ZK-Battleships Shot Prover Tests', async() => {
 
   let sample_prover;
   before(async() => {
 
-  sample_prover = new Prover(
-    './test-cases/zk-Battleship/shot_final.zkey',
-    './test-cases/zk-Battleship/shot.r1cs',
-    './test-cases/zk-Battleship/shot.sym'
-  );
+  const shot_circuitFilePaths: circuitFilePaths = 
+  {
+    zkey: './test-cases/zk-Battleship/shot_final.zkey',
+    r1cs: './test-cases/zk-Battleship/shot.r1cs',
+    sym: './test-cases/zk-Battleship/shot.sym',
+    wasm: './test-cases/zk-Battleship/shot.wasm'
+  }
+  sample_prover = new Prover(shot_circuitFilePaths);
 
-  await sample_prover.genR1csJson();
+  await sample_prover.getR1csJson();
   })    
 
   it('Inputs Parser Test', async() => {
 
-    // console.log(sample_prover.r1csJson);
+    //console.log('r1csJson', sample_prover.r1csJson);
     await sample_prover.prepareInputs();
-    console.log(sample_prover.inputs);
 
     // expect correct input names
     expect(sample_prover.inputs[0].inputName).to.equals('hash');
@@ -51,7 +71,6 @@ describe('ZK-Battleships Shot Prover Tests', async() => {
   it('Groth16 Prover Test', async() => {
     // the order doesn't make difference since circuit inputs are taken as object
     await sample_prover.fullProve(
-      './test-cases/zk-Battleship/shot.wasm',
       {
         ships: [
           [ '1', '0', '0' ],
@@ -75,7 +94,8 @@ describe('ZK-Battleships Shot Prover Tests', async() => {
         hit: '0'
       }
     );     
-    // console.log('proof', sample_prover.proof);
+    //console.log('proof', sample_prover.proof);
+    //console.log('publicInputs', sample_prover.publicInputs)
      
   })
 
@@ -90,13 +110,18 @@ describe('Light Protocol Mock Verifier Test', async() => {
   
   let mock_prover;
   before(async() => {
-    mock_prover = new Prover(
-      './test-cases/light-protocol/build/appTransaction.zkey',
-      './test-cases/light-protocol/build/appTransaction.r1cs',
-      './test-cases/light-protocol/build/appTransaction.sym'
-    );
 
-    await mock_prover.genR1csJson();    
+    const mock_circuitFilePaths: circuitFilePaths = 
+    {
+      zkey: './test-cases/light-protocol/build/appTransaction.zkey',
+      r1cs: './test-cases/light-protocol/build/appTransaction.r1cs',
+      sym: './test-cases/light-protocol/build/appTransaction.sym',
+      wasm: './test-cases/light-protocol/build/appTransaction_js/appTransaction.wasm'
+    }
+
+    mock_prover = new Prover(mock_circuitFilePaths);
+
+    await mock_prover.getR1csJson();    
   })
 
   it('Inputs Parser Test', async() => {
@@ -104,6 +129,9 @@ describe('Light Protocol Mock Verifier Test', async() => {
 
     //console.log('mock verifier r1cs: ', mock_prover.r1csJson);
     await mock_prover.prepareInputs();
+    console.log('nOut: ', mock_prover.nOut);
+    console.log('nPub: ', mock_prover.nPub);
+    console.log('nPrv: ', mock_prover.nPrv);
     const mock_inputs = mock_prover.inputs;
 
     // expect correct number of inputs
@@ -137,28 +165,13 @@ describe('Light Protocol Mock Verifier Test', async() => {
     expect(mock_inputs[6].dimension).to.equals(1);  // inInstructionType[]
     expect(mock_inputs[11].dimension).to.equals(2); // outAmount[][]
     expect(mock_inputs[9].dimension).to.equals(3).to.equals(mock_inputs[9].size.length); // inIndices[][][]
-  
+    
+    mock_prover.parseAndAppendRustStruct(
+      mock_prover.inputs,
+      'mockVerifier',
+      './zk-battleship/programs/zk-battleship/src/lib.rs'
+    );
   })
 
+  // input sample is needed for Groth16 prover and verifier tests
 })
-
-/**
- * sample_prover.genR1csJson().then(update => {
-	//console.log(sample_prover.symText);
-	//console.log(sample_prover.r1csJson);
-});
-
-sample_prover.prepareInputs().then(update => {
-	console.log(sample_prover.inputs);
-});	
-
-// sample_prover.fullProve('./build/Circuit_js/Circuit.wasm').then(update => {
-// 	console.log(sample_prover.publicInputs);
-// 	//console.log(sample_prover.proof);
-
-// 	sample_prover.verify().then(res => {
-// 		console.log('Verification Ok!', res);
-// 	})
-// })
-    })
- */

@@ -1,5 +1,3 @@
-import { findSourceMap } from "module";
-
 const fs = require('fs');
 const snarkjs = require('snarkjs');
 
@@ -12,10 +10,36 @@ interface InputData {
   type: any;
 }
 
-function uniqueMaxSize(arr: Array<InputData> ): Array<InputData> {
+function setType(dimension: number) {
+
+  let type;
+  switch (dimension) {
+    case 0: type = ''
+      break
+    case 1: type = [''] 
+      break
+    case 2: type = [['']]
+      break
+    case 3: type = [[['']]]
+      break
+    case 4: type = [[[['']]]]
+      break
+    case 5: type = [[[[['']]]]]
+      break
+    case 6: type = [[[[[['']]]]]]
+      break
+    case 7: type = [[[[[['']]]]]]
+      break
+    default:
+      type = undefined;
+  }
+  return type;
+}
+
+function uniqueMaxSize(arr: InputData[] ) {
 
   const uniqueArr = arr.reduce((acc, cur) => {
-    const { inputName, dimension, size } = cur;
+    const { inputName, dimension, size, type } = cur;
     const Public = cur.public;
     const sumSize = size.reduce((a, b) => a + b, 0);
 
@@ -26,9 +50,9 @@ function uniqueMaxSize(arr: Array<InputData> ): Array<InputData> {
     );
     
     if (idx === -1) {
-      acc.push({ inputName, dimension, size, sumSize, Public });
+      acc.push({ inputName, dimension, size, sumSize, Public, type });
     } else {
-      acc[idx] = { inputName, dimension, size, sumSize, Public };
+      acc[idx] = { inputName, dimension, size, sumSize, Public, type };
     }
 
     return acc;
@@ -64,19 +88,19 @@ async function prepareInputs() {
 
   // Read .sym file and filter signal names
   const regex = /main\.(.+)/g;
-  let sym = fs.readFileSync('./build/Circuit.sym', 'utf-8');
-  let shot = fs.readFileSync('./shot.sym', 'utf-8');
-  let app = fs.readFileSync('./appTransaction.sym', 'utf-8');
+  let sym = fs.readFileSync('./test-cases/circuit_example/build/Circuit.sym', 'utf-8');
+  let shot = fs.readFileSync('./test-cases/zk-Battleship/shot.sym', 'utf-8');
+  let app = fs.readFileSync('./test-cases/light-protocol/build/appTransaction.sym', 'utf-8');
   //console.log('sym: ', sym);
 
   let match;
   let keys = [];
-  while ((match = regex.exec(sym)) !== null) {
+  while ((match = regex.exec(shot)) !== null) {
     keys.push(match[1]);
     const name = match[1];
     //console.log(name);
   }
-  //console.log('keys', keys);
+  console.log('keys', keys);
   let arr = [];
   
   keys.map(name => {
@@ -84,15 +108,15 @@ async function prepareInputs() {
     const inputName = dimension === 0 ? name : name.slice(0, name.indexOf('['));
     //const size = [].push(parseInt(name[name.indexOf('[')+1]));
     const size = dimension === 0 ? [0] : (name.match(/\[(.*?)\]/g) || []).map(m => m.replace(/\[|\]/g, '')).map(n => parseInt(n));
-  
-    arr.push({ inputName, dimension, size });
+    const type = setType(dimension);
+    arr.push({ inputName, dimension, size, type });
   })
   
   //let marr = uniqueMaxSum(arr);
   //console.log('uniqueMaxSum', marr);
   //unique(marr);
   // Retrieve the number of outputs as well as the number of private and public inputs from the R1CS file
-  const r1cs = await snarkjs.r1cs.exportJson('./build/Circuit.r1cs');
+  const r1cs = await snarkjs.r1cs.exportJson('./test-cases/zk-Battleship/shot.r1cs');
   //console.log(r1cs);
   
   const nOut = r1cs.nOutputs;
@@ -110,7 +134,7 @@ async function prepareInputs() {
   }
   // console.log('arr', arr.slice(0, total));
   let marr = uniqueMaxSize(arr.slice(0, total));
-  // console.log('prepared', marr.slice(0, uarr.length));
+  console.log('lengths', marr.length, uarr.length);
   
 
   return marr.slice(0, uarr.length);
@@ -120,6 +144,7 @@ async function prepareInputs() {
 prepareInputs().then(result => {
   let prepared = result; 
   console.log(prepared);
+
 });
 
 export {

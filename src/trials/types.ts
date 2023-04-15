@@ -1,101 +1,16 @@
-interface FixedLengthArray<T, L extends number> extends Array<T> {
-    readonly length: L;
-  }
-type A = FixedLengthArray<number, 3>
-  const arr = [1, 2, 3] as FixedLengthArray<number, 2>;
-  console.log(arr)
+import { InputType } from "zlib";
+
   
-  type ArrayType<N extends number> =
-  N extends 0 ? string :
-  N extends 1 ? string[] :
-  N extends 2 ? string[][] :
-  N extends 3 ? string[][][] :
-  string[][][];
+const inputMap = [
+  { inputName: 'a', dimension: 0, size: [0], Public: 1 },
+  { inputName: 'b', dimension: 1, size: [5], Public: 1 },
+  { inputName: 'c', dimension: 2, size: [3, 2], Public: 1 },
+  { inputName: 'd', dimension: 3, size: [3, 2, 3], Public: 1 },
+  { inputName: 'e', dimension: 4, size: [3, 2, 3, 5], Public: 1 },
 
-// Example usage
-const arr1: ArrayType<1> = ['hello', 'world'];
-const arr2: ArrayType<3> = [[['foo'], ['bar']], [['baz'], ['qux']]];
+];
 
-
-const filteredInputs = [
-    { inputName: 'out1', dimension: 0, size: [ 0 ], Public: 1 },
-    { inputName: 'out2', dimension: 0, size: [ 0 ], Public: 1 },
-    { inputName: 'c', dimension: 0, size: [ 0 ], Public: 1 },
-    { inputName: 'd', dimension: 3, size: [ 0 ], Public: 1 },
-    { inputName: 'f', dimension: 2, size: [ 0 ], Public: 1 },
-    { inputName: 'a', dimension: 0, size: [ 0 ], Public: 0 },
-    { inputName: 'b', dimension: 0, size: [ 0 ], Public: 0 },
-    { inputName: 'enforce', dimension: 0, size: [ 0 ], Public: 0 }
-]
-
-let obj = {};
-for (let i=0; i<filteredInputs.length; i++) {
-    let dim = filteredInputs[i].dimension;
-    obj[filteredInputs[i].inputName] as ArrayType<3>
-}
-
-console.log(obj)
-
-interface InputMap<T> {
-    inputName: string;
-    dimension: number;
-    size: Array<number>;
-    Public: number;
-  }
-  
-  function parseInputMap<T>(inputMap: Array<InputMap<T>>): Record<string, T | T[]> {
-    const result: Record<string, T | T[]> = {};
-    inputMap.forEach((input) => {
-      const { inputName, dimension, size } = input;
-      let type: T | T[] | undefined = undefined;
-      if (dimension === 0) {
-        type = 'string' as T ;
-      } else {
-        type = 'string' as T;
-        for (let i = 0; i < dimension; i++) {
-          type = `Array<${type}>` as T | Array<T>;
-        }
-      }
-      if (type !== undefined) {
-        result[inputName] = type;
-      }
-    });
-    return result;
-  }
-  
-  const inputMap: Array<InputMap<number>> = [
-    { inputName: 'a', dimension: 0, size: [0], Public: 1 },
-    { inputName: 'b', dimension: 1, size: [5], Public: 1 },
-    { inputName: 'c', dimension: 2, size: [3, 2], Public: 1 },
-    { inputName: 'd', dimension: 3, size: [3, 2, 3], Public: 1 },
-    { inputName: 'e', dimension: 4, size: [3, 2, 3, 5], Public: 1 },
-  
-  ];
-  
-  const output = parseInputMap(inputMap);
-  console.log('output', output); // { a: 'string', b: Array<number>, c: Array<Array<string>> }
-type ParsedTypes<T> = T extends 'string' ? string :
-  T extends `Array<${infer U}>` ? U extends 'string' ? string[] : ParsedArray<U> :
-  { [K in keyof T]: ParsedTypes<T[K]> };
-
-interface ParsedArray<T> extends Array<ParsedTypes<T>> {}
-
-function parseTypes<T extends Record<string, string>>(input: T): ParsedTypes<T> {
-  const result: any = {};
-  for (const [inputName, type] of Object.entries(input)) {
-    if (type === 'string') {
-      result[inputName] = 'string';
-    } else if (type.startsWith('Array<')) {
-      const innerType = type.slice(6, -1);
-      result[inputName] = [] as ParsedArray<typeof innerType>;
-    } else {
-      result[inputName] = parseTypes(JSON.parse(type));
-    }
-  }
-  return result;
-}
-
-const input = {
+const input_sample = {
   a: 'string',
   b: 'Array<string>',
   c: 'Array<Array<string>>',
@@ -103,4 +18,155 @@ const input = {
   e: 'Array<Array<Array<Array<string>>>>'
 };
 
-type OutputType = ParsedTypes<typeof input>;
+
+// GPT4 generics code
+type Dimension = 0 | 1 | 2 | 3 | 4 | 5;
+
+type NestedArray<T, D extends Dimension> = D extends 0
+  ? T
+  : D extends 1
+  ? Array<T>
+  : D extends 2
+  ? Array<Array<T>>
+  : D extends 3
+  ? Array<Array<Array<T>>>
+  : D extends 4
+  ? Array<Array<Array<Array<T>>>>
+  : Array<Array<Array<Array<Array<T>>>>>;
+
+type DimensionMap = {
+  0: 0;
+  1: 1;
+  2: 2;
+  3: 3;
+  4: 4;
+  5: 5;
+};
+
+function process<T, D extends Dimension>(input: NestedArray<T, D>): NestedArray<T, D> {
+  return input;
+}
+
+interface InputData {
+  inputName: string;
+  dimension: number;
+  size: number[];
+  public?: number;
+}
+const MyArray = [
+  { name: "Alice", age: 15 },
+  { name: "Bob", age: 23 },
+  { name: "Eve", age: 38 },
+];
+ 
+type Person = typeof MyArray[number];
+
+const prover_inputs = [
+  { inputName: 'input0', dimension: 0, size: [] },
+  { inputName: 'input1', dimension: 1, size: [5] },
+  { inputName: 'input2', dimension: 2, size: [5, 5] },
+  { inputName: 'input3', dimension: 3, size: [5, 5, 5] },
+  { inputName: 'input4', dimension: 4, size: [5, 5, 5, 5] },
+  { inputName: 'input5', dimension: 5, size: [5, 5, 5, 5, 5] },
+];
+
+const a = prover_inputs[2].dimension;
+
+type NumberToDimension<N extends number> = N extends keyof DimensionMap ? DimensionMap[N] : never;
+
+const result = process<number, NumberToDimension<typeof a> & Dimension>([[42]] as NestedArray<number, NumberToDimension<typeof a> & Dimension>);
+console.log(typeof result)
+
+///////////////
+
+let inputs_sample = [
+  { inputName: 'hash', dimension: 0, size: [ 0 ], Public: 1 },
+  { inputName: 'nonce', dimension: 0, size: [ 0 ], Public: 1 },
+  { inputName: 'encrypted_shot', dimension: 1, size: [ 3 ], Public: 1 },
+  { inputName: 'ships', dimension: 2, size: [ 4, 2 ], Public: 0 },
+  { inputName: 'key', dimension: 1, size: [ 1 ], Public: 0 },
+  { inputName: 'hit', dimension: 0, size: [ 0 ], Public: 0 }
+]
+let ssample = [
+  { inputName: 'hash', type: { dimension: 0, size: [ 0 ] }, Public: 1 },
+  { inputName: 'nonce', type: { dimension: 0, size: [ 0 ] }, Public: 1 },
+]
+type circomIDL = typeof ssample[number];
+type circuitInput = typeof inputs_sample[number];
+
+export type IdlCircuit = {
+  name: string;
+  type: inputType;
+  size?: number[];
+  public?: boolean;
+};
+
+export type inputType = "string" | "array";
+
+type mapish = {[k: string]: boolean};
+type M = keyof mapish;
+let tt: M
+let fb: string[][];
+let tp: typeof inputs_sample;
+
+function f() {
+  return { x: 10, y: 3 };
+}
+
+type P = ReturnType<typeof f>;
+
+type ParseTypeString<T extends string> =
+  T extends 'string' ? string
+  : T extends 'string[]' ? string[]
+  : T extends 'string[][]' ? string[][]
+  : T extends 'string[][][]' ? string[][][]
+  : T extends 'string[][][][]' ? string[][][][]
+  : T extends 'string[][][][][]' ? string[][][][][]
+  : never;
+
+let ss = 'string[][][]';
+
+type TestType = ParseTypeString<'string[][]'>; // The type will be string[][][]
+
+let pp: TestType = [['s']]
+
+function parseType<T extends string>(input: T): ParseTypeString<T> {
+  throw "unimplemented";
+}
+
+let abc = parseType(inputs_sample[3].dimension === 2 ? 'string[][]': undefined);
+
+const string_object = {
+  a: 'string',
+  b: 'string[]',
+  c: 'string[][]',
+  d: 'string[][][]',
+  e: 'string[][][][]'
+};
+
+
+const proof = {
+  pi_a: [
+    '21526111195252256294907576963009410152346119980938730529936899251435017845368',
+    '18439742383111692307371150889774453297827550939712274985550146413453876282029',
+    '1'
+  ],
+  pi_b: [
+    [
+      '4056828859092658966165081811473140250979871661761664025323129304063426794897',
+      '21710827246673677506834440387872671178808598036349536668965077819998271231238'
+    ],
+    [
+      '146078824235981017454177503667099974923432959985845758222681160184512486447',
+      '15609636510565551377448974148054534534216765486796328206213701320681135352794'
+    ],
+    [ '1', '0' ]
+  ],
+  pi_c: [
+    '6557796398336996177072398571922760824323278192873236022003521061428656308020',
+    '3312610127253935140906387451775096520486765355720307302677276346735300583247',
+    '1'
+  ],
+  protocol: 'groth16',
+  curve: 'bn128'
+}

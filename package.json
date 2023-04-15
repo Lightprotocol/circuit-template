@@ -6,8 +6,8 @@
   "scripts": {
     "test": "ts-mocha --resolveJsonModule ./tsconfig.json test/**.ts",
     "test-prover": "ts-mocha --timeout 5000 ./test/prover.test.ts",
-    "build": "sh buildCircuit.sh",
-    "clean": "rm -rf ./build"
+    "build": "sh ./test-cases/circuit_example/buildCircuit.sh",
+    "clean": "rm -rf ./test-cases/circuit_example/build"
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +19,7 @@
     "snarkjs": "^0.5.0"
   },
   "devDependencies": {
+    "@project-serum/anchor": "^0.26.0",
     "@types/chai": "^4.3.0",
     "@types/chai-as-promised": "^7.1.5",
     "@types/mocha": "^10.0.1",
