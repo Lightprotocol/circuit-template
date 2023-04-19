@@ -1,5 +1,6 @@
-import { Prover, circuitFilePaths } from '../src/prover';
+import { Prover, circuitFilePaths } from '../src/trials/prover_old';
 import { expect } from 'chai';
+const fs = require('fs');
 
 describe('Circuit-Example Prover Tests', async() => {
   let prover;
@@ -20,7 +21,10 @@ describe('Circuit-Example Prover Tests', async() => {
     console.log('nOut: ', prover.nOut);
     console.log('nPub: ', prover.nPub);
     console.log('nPrv: ', prover.nPrv);
-  
+
+    const idl = JSON.parse(fs.readFileSync('./zk-battleship/target/idl/zk_battleship.json'));
+    console.log(idl)
+    
   })
 })
 describe('ZK-Battleships Shot Prover Tests', async() => {
@@ -66,6 +70,12 @@ describe('ZK-Battleships Shot Prover Tests', async() => {
     const ships = sample_prover.inputs[3];
     expect(ships.dimension).to.equals(ships.size.length);
 
+    // sample_prover.parseAndAppendRustStruct(
+    //   sample_prover.inputs,
+    //   'BattleshipShot',
+    //   './zk-battleship/programs/zk-battleship/src/lib.rs'
+    // );
+
   })
 
   it('Groth16 Prover Test', async() => {
@@ -101,7 +111,9 @@ describe('ZK-Battleships Shot Prover Tests', async() => {
 
   it('Groth16 Verifier Test', async() => {
     const result = await sample_prover.verify();
-    expect(result).to.equals(true);  
+    expect(result).to.equals(true); 
+    //console.log('vKey: ', sample_prover.vKey);
+     
   })
 
 })
@@ -166,11 +178,11 @@ describe('Light Protocol Mock Verifier Test', async() => {
     expect(mock_inputs[11].dimension).to.equals(2); // outAmount[][]
     expect(mock_inputs[9].dimension).to.equals(3).to.equals(mock_inputs[9].size.length); // inIndices[][][]
     
-    mock_prover.parseAndAppendRustStruct(
-      mock_prover.inputs,
-      'mockVerifier',
-      './zk-battleship/programs/zk-battleship/src/lib.rs'
-    );
+    // mock_prover.parseAndAppendRustStruct(
+    //   mock_prover.inputs,
+    //   'mockVerifier',
+    //   './zk-battleship/programs/zk-battleship/src/lib.rs'
+    // );
   })
 
   // input sample is needed for Groth16 prover and verifier tests
