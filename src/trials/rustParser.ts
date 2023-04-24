@@ -116,9 +116,9 @@ console.log('mock_verifier rust code: \n\n', parseAndGenerateRustCode(mock_input
 // ... previous code, including the inputs array and parseAndGenerateRustCode function ...
 
 const circuitAccount = parseAndGenerateRustCode(inputs, 'shot');
-const libPath = "./src/trials/lib.rs";
+const appendPath = "./zk-battleship/programs/zk-battleship/src/shot_verifying_key.rs";
 
-fs.appendFile(libPath, `\n${circuitAccount}\n`, (err) => {
+fs.appendFile(appendPath, `\n${circuitAccount}\n`, (err) => {
   if (err) {
     console.error("Failed to append the Rust code to lib.rs:", err);
   } else {

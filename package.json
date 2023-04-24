@@ -4,7 +4,8 @@
   "description": "template for circom circuits",
   "main": "index.js",
   "scripts": {
-    "test": "ts-mocha --resolveJsonModule ./tsconfig.json test/**.ts",
+    "test-sample": "ts-mocha --resolveJsonModule ./tsconfig.json test/test.ts",
+    "test-prepare": "ts-mocha --timeout 5000 ./test/prepare.test.ts",
     "test-prover": "ts-mocha --timeout 5000 ./test/prover.test.ts",
     "build": "sh ./test-cases/circuit_example/buildCircuit.sh",
     "clean": "rm -rf ./test-cases/circuit_example/build"

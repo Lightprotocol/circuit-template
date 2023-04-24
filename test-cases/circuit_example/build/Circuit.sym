@@ -1,0 +1,17 @@
+1,1,2,main.out1[0]
+2,2,2,main.out1[1]
+3,3,2,main.out2[0]
+4,4,2,main.out2[1]
+5,5,2,main.out2[2]
+6,6,2,main.c
+7,7,2,main.d
+8,8,2,main.f
+9,-1,2,main.a
+10,-1,2,main.b
+11,9,2,main.enforce
+12,-1,1,main.if_enforce.enabled
+13,-1,1,main.if_enforce.in[0]
+14,-1,1,main.if_enforce.in[1]
+15,10,0,main.if_enforce.isz.out
+16,-1,0,main.if_enforce.isz.in
+17,11,0,main.if_enforce.isz.inv

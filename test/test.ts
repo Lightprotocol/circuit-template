@@ -1,5 +1,5 @@
 let circomlibjs = require("circomlibjs");
-const calculateWtns = require("../build/Circuit_js/witness_calculator.js");
+const calculateWtns = require("../test-cases/circuit_example/build/Circuit_js/witness_calculator.js");
 var ffjavascript = require("ffjavascript");
 const { unstringifyBigInts, stringifyBigInts, leInt2Buff, leBuff2int } = ffjavascript.utils;
 import { readFileSync } from "fs";
@@ -7,10 +7,9 @@ const snarkjs = require("snarkjs");
 
 describe("Tests", () => {
 
-
     it("example circuit proofgen", async () => {
-        const completePathZkey = "./build/circuit.zkey";
-        const buffer = readFileSync("./build/Circuit_js/Circuit.wasm");
+        const completePathZkey = "./test-cases/circuit_example/build/circuit.zkey";
+        const buffer = readFileSync("./test-cases/circuit_example/build/Circuit_js/Circuit.wasm");
 
 
         const inputs = {
@@ -42,11 +41,11 @@ describe("Tests", () => {
         const vKey = await snarkjs.zKey.exportVerificationKey(
             completePathZkey,
           );
-        const r1cs = await snarkjs.r1cs.exportJson('./build/Circuit.r1cs');
+        const r1cs = await snarkjs.r1cs.exportJson('./test-cases/circuit_example/build/Circuit.r1cs');
         console.log('r1cs json: ', r1cs);
         
         const zkey = await snarkjs.zKey.exportJson(completePathZkey);
-        //console.log('reading zkey: : ', zkey);
+        console.log('reading zkey: : ', zkey);
         const res = await snarkjs.groth16.verify(vKey, publicSignals, proof);
         if (res === true) {
           console.log("Verification OK");
