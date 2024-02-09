@@ -1,4 +1,4 @@
-use std::time::Instant;
+
 use ark_bn254::Bn254;
 use ark_circom::{CircomBuilder, CircomConfig};
 use ark_circom::circom::Inputs;
