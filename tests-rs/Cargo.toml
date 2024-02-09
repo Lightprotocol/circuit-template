@@ -1,0 +1,28 @@
+[package]
+name = "tests-rs"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ark-circom = { git = "https://github.com/Yiheng-Liu/circom-compat", branch = "feat/multi-dimension-input" }
+ark-bn254 = { version = "=0.4.0" }
+ark-std = { version = "=0.4.0", default-features = false, features = ["parallel"] }
+ark-groth16 = { version = "=0.4.0", default-features = false, features = ["parallel"] }
+ark-crypto-primitives = { version = "=0.4.0" }
+num-bigint = "0.4"
+
+# error handling
+thiserror = "=1.0.39"
+color-eyre = "=0.6.2"
+
+hex = "0.4.3"
+hex-literal = "0.4.1"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "merkle_proof_bench"
+harness = false
