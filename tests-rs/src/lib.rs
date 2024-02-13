@@ -1,15 +1,17 @@
-use std::collections::HashMap;
-use std::io::Cursor;
-use std::time::Instant;
-use ark_bn254::Bn254;
+use ark_bn254::{Bn254, Fr};
 use ark_circom::circom::Inputs;
-use ark_circom::{CircomReduction, read_zkey, WitnessCalculator};
-use ark_groth16::Groth16;
+use ark_circom::{read_zkey, CircomReduction, WitnessCalculator};
+use ark_groth16::{Groth16, Proof, ProvingKey};
 use ark_std::rand::thread_rng;
 use ark_std::Zero;
 use light_hasher::{Hasher, Poseidon};
 use light_merkle_tree_reference::MerkleTree;
 use num_bigint::{BigInt, Sign};
+use std::collections::HashMap;
+use std::io::Cursor;
+use std::time::Instant;
+use ark_crypto_primitives::snark::SNARK;
+use ark_relations::r1cs::ConstraintMatrices;
 
 pub struct MerkleTreeProofInputs {
     root: BigInt,
@@ -18,12 +20,30 @@ pub struct MerkleTreeProofInputs {
     in_path_elements: Vec<BigInt>,
 }
 
-pub fn proof(proof_inputs: MerkleTreeProofInputs, zkey: &[u8], wasm_path: &str) {
+pub struct ProofInputs<'a> {
+    inputs: HashMap<String, Inputs>,
+    pk: ProvingKey<Bn254>,
+    constraints: ConstraintMatrices<Fr>,
+    wasm_path: &'a str,
+}
+
+pub struct ProofOutputs {
+    proof: Proof<Bn254>,
+    witness: Vec<Fr>
+}
+
+pub fn verify(proof_inputs: ProofInputs, proof_outputs: ProofOutputs) -> bool {
+    let pvk = Groth16::<Bn254>::process_vk(&proof_inputs.pk.vk).unwrap();
+    let inputs = &proof_outputs.witness[1..proof_inputs.constraints.num_instance_variables];
+    Groth16::<Bn254>::verify_with_processed_vk(&pvk, inputs, &proof_outputs.proof).unwrap()
+}
+
+pub fn prepare_inputs<'a>(proof_inputs: MerkleTreeProofInputs, zkey: &[u8], wasm_path: &'a str) -> ProofInputs<'a> {
     println!("loading zkey file...");
-    let mut start = Instant::now();
+    let start = Instant::now();
     let mut cursor = Cursor::new(zkey);
     let (params, matrices) = read_zkey(&mut cursor).unwrap();
-    let mut duration = start.elapsed();
+    let duration = start.elapsed();
     println!("zkey loaded: {:?}", duration);
 
     let num_inputs = matrices.num_instance_variables;
@@ -34,24 +54,36 @@ pub fn proof(proof_inputs: MerkleTreeProofInputs, zkey: &[u8], wasm_path: &str) 
 
     let inputs = {
         let mut inputs: HashMap<String, Inputs> = HashMap::new();
-        inputs.entry("root".to_string()).or_insert_with(|| Inputs::BigInt(proof_inputs.root));
-        inputs.entry("leaf".to_string()).or_insert_with(|| Inputs::BigInt(proof_inputs.leaf));
-        inputs.entry("inPathIndices".to_string()).or_insert_with(|| Inputs::BigInt(proof_inputs.in_path_indices));
-        inputs.entry("inPathElements".to_string()).or_insert_with(|| Inputs::BigIntVec(proof_inputs.in_path_elements));
+        inputs
+            .entry("root".to_string())
+            .or_insert_with(|| Inputs::BigInt(proof_inputs.root));
+        inputs
+            .entry("leaf".to_string())
+            .or_insert_with(|| Inputs::BigInt(proof_inputs.leaf));
+        inputs
+            .entry("inPathIndices".to_string())
+            .or_insert_with(|| Inputs::BigInt(proof_inputs.in_path_indices));
+        inputs
+            .entry("inPathElements".to_string())
+            .or_insert_with(|| Inputs::BigIntVec(proof_inputs.in_path_elements));
         inputs
     };
+    ProofInputs {
+        inputs,
+        pk: params,
+        constraints: matrices,
+        wasm_path
+    }
+}
 
+pub fn prove(data: &ProofInputs) -> ProofOutputs {
     println!("generating witness...");
-    start = Instant::now();
-    let mut wtns = WitnessCalculator::new(wasm_path).unwrap();
-
+    let mut start = Instant::now();
+    let mut wtns = WitnessCalculator::new(data.wasm_path).unwrap();
     let full_assignment = wtns
-        .calculate_witness_element::<Bn254, _>(
-            inputs,
-            false,
-        )
+        .calculate_witness_element::<Bn254, _>(data.inputs.clone(), false)
         .unwrap();
-    duration = start.elapsed();
+    let mut duration = start.elapsed();
     println!("witness generated: {:?}", duration);
 
     println!("creating proof...");
@@ -60,26 +92,32 @@ pub fn proof(proof_inputs: MerkleTreeProofInputs, zkey: &[u8], wasm_path: &str) 
     use ark_std::UniformRand;
     let rng = &mut rng;
 
-    let r = ark_bn254::Fr::rand(rng);
-    let s = ark_bn254::Fr::rand(rng);
+    let r = Fr::rand(rng);
+    let s = Fr::rand(rng);
 
     let proof = Groth16::<Bn254, CircomReduction>::create_proof_with_reduction_and_matrices(
-        &params,
+        &data.pk,
         r,
         s,
-        &matrices,
-        num_inputs,
-        num_constraints,
+        &data.constraints,
+        data.constraints.num_instance_variables,
+        data.constraints.num_constraints,
         full_assignment.as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     duration = start.elapsed();
     println!("proof created: {:?}", duration);
     println!("proof: {:?}", proof);
+
+    ProofOutputs {
+        proof,
+        witness: full_assignment
+    }
 }
 
-pub fn prepare_inputs() -> MerkleTreeProofInputs {
+
+pub fn merkle_tree_inputs() -> MerkleTreeProofInputs {
     const HEIGHT: usize = 22;
     const ROOTS: usize = 1;
 
@@ -94,9 +132,9 @@ pub fn prepare_inputs() -> MerkleTreeProofInputs {
     print_node_info(&leaf, "hash_of_leaf");
     print_node_info(root1, "root1");
 
-    let proof_of_leaf = merkle_tree.get_proof_of_leaf(0).map(|el| {
-        BigInt::from_bytes_be(Sign::Plus, &el)
-    });
+    let proof_of_leaf = merkle_tree
+        .get_proof_of_leaf(0)
+        .map(|el| BigInt::from_bytes_be(Sign::Plus, &el));
 
     let leaf_bn = BigInt::from_bytes_be(Sign::Plus, &leaf);
     let root_bn = BigInt::from_bytes_be(Sign::Plus, root1);
@@ -107,7 +145,7 @@ pub fn prepare_inputs() -> MerkleTreeProofInputs {
         leaf: leaf_bn,
         root: root_bn,
         in_path_indices,
-        in_path_elements
+        in_path_elements,
     }
 }
 

@@ -1390,6 +1390,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4271d37baee1b8c7e4b708028c57d816cf9d2434acb33a549475f78c181f6253"
 
 [[package]]
+name = "groth16-solana"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5650595f0c8cf8b45ddaa0d9ede9ae54b45f36352afde98e0face95ccee4854c"
+dependencies = [
+ "solana-program",
+ "thiserror",
+]
+
+[[package]]
 name = "half"
 version = "1.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2753,10 +2763,12 @@ dependencies = [
  "ark-circom",
  "ark-crypto-primitives",
  "ark-groth16",
+ "ark-relations",
  "ark-std",
  "ark-zkey",
  "color-eyre",
  "criterion",
+ "groth16-solana",
  "hex",
  "hex-literal",
  "light-hasher",
