@@ -13,6 +13,7 @@ use std::time::Instant;
 use ark_crypto_primitives::snark::SNARK;
 use ark_relations::r1cs::ConstraintMatrices;
 
+#[derive(Clone, Debug)]
 pub struct MerkleTreeProofInputs {
     root: BigInt,
     leaf: BigInt,
