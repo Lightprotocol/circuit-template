@@ -32,13 +32,13 @@ pub struct ProofOutputs {
     witness: Vec<Fr>
 }
 
-pub fn verify(proof_inputs: ProofInputs, proof_outputs: ProofOutputs) -> bool {
+pub fn verify(proof_inputs: &ProofInputs, proof_outputs: &ProofOutputs) -> bool {
     let pvk = Groth16::<Bn254>::process_vk(&proof_inputs.pk.vk).unwrap();
     let inputs = &proof_outputs.witness[1..proof_inputs.constraints.num_instance_variables];
     Groth16::<Bn254>::verify_with_processed_vk(&pvk, inputs, &proof_outputs.proof).unwrap()
 }
 
-pub fn prepare_inputs<'a>(proof_inputs: MerkleTreeProofInputs, zkey: &[u8], wasm_path: &'a str) -> ProofInputs<'a> {
+pub fn prepare_inputs<'a>(proof_inputs: &[MerkleTreeProofInputs], zkey: &[u8], wasm_path: &'a str) -> ProofInputs<'a> {
     println!("loading zkey file...");
     let start = Instant::now();
     let mut cursor = Cursor::new(zkey);
@@ -54,18 +54,29 @@ pub fn prepare_inputs<'a>(proof_inputs: MerkleTreeProofInputs, zkey: &[u8], wasm
 
     let inputs = {
         let mut inputs: HashMap<String, Inputs> = HashMap::new();
+        let mut roots: Vec<BigInt> = Vec::new();
+        let mut leafs: Vec<BigInt> = Vec::new();
+        let mut indices: Vec<BigInt> = Vec::new();
+        let mut els: Vec<Vec<BigInt>> = Vec::new();
+
+        for input in proof_inputs {
+            roots.push(input.root.clone());
+            leafs.push(input.leaf.clone());
+            indices.push(input.in_path_indices.clone());
+            els.push(input.in_path_elements.clone());
+        }
         inputs
             .entry("root".to_string())
-            .or_insert_with(|| Inputs::BigInt(proof_inputs.root));
+            .or_insert_with(|| Inputs::BigIntVec(roots));
         inputs
             .entry("leaf".to_string())
-            .or_insert_with(|| Inputs::BigInt(proof_inputs.leaf));
+            .or_insert_with(|| Inputs::BigIntVec(leafs));
         inputs
             .entry("inPathIndices".to_string())
-            .or_insert_with(|| Inputs::BigInt(proof_inputs.in_path_indices));
+            .or_insert_with(|| Inputs::BigIntVec(indices));
         inputs
             .entry("inPathElements".to_string())
-            .or_insert_with(|| Inputs::BigIntVec(proof_inputs.in_path_elements));
+            .or_insert_with(|| Inputs::BigIntVecVec(els));
         inputs
     };
     ProofInputs {

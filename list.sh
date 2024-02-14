@@ -1,7 +1,7 @@
 #!/bin/bash
 # Create an array with the directories
 #dirs=(merkle22_{1..4} merkle22_10)
-dirs=(merkle22_1 merkle22_2 merkle22_4 merkle22_8)
+dirs=(merkle22_1 merkle22_2 merkle22_3 merkle22_4 merkle22_8)
 
 # Iterate over the array
 for dir in "${dirs[@]}"; do
